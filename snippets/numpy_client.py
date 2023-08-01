@@ -18,12 +18,18 @@ if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
 
-        arr = np.zeros(SHAPE, DTYPE)
-        arr_bytes = arr.tobytes()
-        s.sendall(arr_bytes)
-        print(f"Sent {arr}")
+        # send init message
+        init_msg = _utils.encode_init_message(DTYPE, SHAPE)
+        s.sendall(init_msg)
+        print(f"Sent init msg")
 
-        rec_arr_bytes = s.recv(_utils.get_numpy_bytes_len(DTYPE, SHAPE))
-        rec_arr = np.frombuffer(rec_arr_bytes, dtype=DTYPE).reshape(SHAPE)
+        array_msg_len = _utils.get_numpy_bytes_len(DTYPE, SHAPE)
+        for _ in range(5):
+            arr = np.zeros(SHAPE, DTYPE)
+            arr_bytes = arr.tobytes()
+            s.sendall(arr_bytes)
+            print(f"Sent {arr}")
 
-    print(f"Received {rec_arr}")
+            rec_arr_bytes = s.recv(array_msg_len)
+            rec_arr = np.frombuffer(rec_arr_bytes, dtype=DTYPE).reshape(SHAPE)
+            print(f"Received {rec_arr}")

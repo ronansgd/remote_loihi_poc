@@ -23,13 +23,19 @@ if __name__ == "__main__":
             conn, addr = s.accept()
             with conn:
                 print(f"Connected by {addr}")
+
+                # recv init message
+                init_msg = conn.recv(_utils.INIT_MESSAGE_LEN)
+                dtype, shape = _utils.decode_init_message(init_msg)
+                array_msg_len = _utils.get_numpy_bytes_len(dtype, shape)
+
+                print(f"Decoded init message: {dtype} {shape}")
+
                 while True:
-                    arr_bytes = conn.recv(
-                        _utils.get_numpy_bytes_len(DTYPE, SHAPE))
+                    arr_bytes = conn.recv(array_msg_len)
                     if not arr_bytes:
                         break
 
-                    arr = np.frombuffer(arr_bytes, dtype=DTYPE).reshape(SHAPE)
+                    arr = np.frombuffer(arr_bytes, dtype=dtype).reshape(shape)
                     print(f"Received array {arr}")
-
                     conn.sendall(arr.tobytes())
