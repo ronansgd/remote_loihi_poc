@@ -9,8 +9,8 @@ if __name__ == "__main__":
 
     # encode to byte string & check size
     arr_bytes = arr.tobytes()
-    theo_bytes_size = np.dtype(dtype).itemsize * np.prod(shape, dtype=np.int64)
-    assert len(arr_bytes) == theo_bytes_size
+    theo_byte_len = np.dtype(dtype).itemsize * np.prod(shape, dtype=np.int64)
+    assert len(arr_bytes) == theo_byte_len
 
     # reconstruct array from byte string
     rec_arr = np.frombuffer(arr_bytes, dtype=dtype).reshape(shape)
