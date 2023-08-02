@@ -10,12 +10,8 @@ INT_BYTE_SIZE = 4  # bytes
 # dtype, ndim, *shape
 INIT_MESSAGE_LEN = INT_BYTE_SIZE + INT_BYTE_SIZE + MAX_NDIM * INT_BYTE_SIZE
 
-DTYPE_TO_INT = {
-    np.int32: 0,
-}
-INT_TO_DTYPE = {
-    0: np.int32,
-}
+DTYPE_TO_INT = {dtype: i for i, dtype in enumerate((np.int32, np.float64))}
+INT_TO_DTYPE = {v: k for k, v in DTYPE_TO_INT.items()}
 
 
 def encode_init_message(dtype: np.dtype, shape: tuple) -> str:
