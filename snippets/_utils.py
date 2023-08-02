@@ -54,7 +54,8 @@ MAX_NDIM = 8
 # dtype, ndim, *shape
 INIT_MESSAGE_LEN = BYTES_PER_INT + BYTES_PER_INT + MAX_NDIM * BYTES_PER_INT
 
-DTYPE_TO_INT = {dtype: i for i, dtype in enumerate((np.int32, np.float64))}
+DTYPE_TO_INT = {dtype: i for i, dtype in enumerate(
+    (bool, np.int8, np.int16, np.int32, np.int64, np.float32, np.float64))}
 INT_TO_DTYPE = {v: k for k, v in DTYPE_TO_INT.items()}
 
 
