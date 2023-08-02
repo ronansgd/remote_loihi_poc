@@ -1,6 +1,3 @@
-# https://realpython.com/python-sockets/
-# echo-server.py
-
 import socket
 import numpy as np
 
@@ -8,10 +5,6 @@ import _utils
 
 HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
 PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
-
-# TODO: to be removed
-SHAPE = (10,)
-DTYPE = np.int32
 
 
 if __name__ == "__main__":
@@ -27,7 +20,7 @@ if __name__ == "__main__":
                 # recv init message
                 init_msg = conn.recv(_utils.INIT_MESSAGE_LEN)
                 dtype, shape = _utils.decode_init_message(init_msg)
-                array_msg_len = _utils.get_numpy_bytes_len(dtype, shape)
+                array_msg_len = _utils.get_array_bytes_len(dtype, shape)
 
                 print(f"Decoded init message: {dtype} {shape}")
 

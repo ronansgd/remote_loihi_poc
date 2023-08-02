@@ -1,6 +1,3 @@
-# https://realpython.com/python-sockets/
-# echo-client.py
-
 import socket
 
 import numpy as np
@@ -12,7 +9,6 @@ PORT = 65432  # The port used by the server
 
 SHAPE = (10,)
 DTYPE = np.int32
-NDIM = len(SHAPE)
 
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -23,9 +19,9 @@ if __name__ == "__main__":
         s.sendall(init_msg)
         print(f"Sent init msg")
 
-        array_msg_len = _utils.get_numpy_bytes_len(DTYPE, SHAPE)
-        for _ in range(5):
-            arr = np.zeros(SHAPE, DTYPE)
+        array_msg_len = _utils.get_array_bytes_len(DTYPE, SHAPE)
+        for i in range(5):
+            arr = np.full(SHAPE, i, DTYPE)
             arr_bytes = arr.tobytes()
             s.sendall(arr_bytes)
             print(f"Sent {arr}")
