@@ -1,4 +1,5 @@
 import socket
+import time
 
 from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.model.py.model import PyLoihiProcessModel
@@ -59,8 +60,16 @@ class PyClientProcess(PyLoihiProcessModel):
         # init & connect data socket
         # TODO: spin why we cannot connect
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.connect(
-            tuple((self.proc_params[k] for k in ('host', 'port'))))
+        hp_tuple = tuple((self.proc_params[k] for k in ('host', 'port')))
+
+        while True:
+            try:
+                self.data_sock.connect(hp_tuple)
+                break
+            except ConnectionRefusedError:
+                print("One more spin to wait for host...")
+                time.sleep(1.)
+                continue
 
     def run_spk(self) -> None:
         # send dummy data
