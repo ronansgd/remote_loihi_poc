@@ -47,6 +47,7 @@ class ServerProcess(AbstractProcess):
 @requires(CPU)
 @tag('floating_pt')
 class PyServerProcess(PyLoihiProcessModel):
+    # TODO: add ports to communicate with other lava processes
     inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, float)
     data: np.ndarray = LavaPyType(np.ndarray, float)
 
@@ -64,39 +65,53 @@ class PyServerProcess(PyLoihiProcessModel):
         self.data_sock.bind((routing.LOCAL_HOST, routing.DATA_PORT))
         self.data_sock.listen()
 
+        # wait for first client
+        self.wait_for_new_client()
+
         # NOTE: could move the connection logic to run_spk in a later version
-        self.in_conn, addr = self.data_sock.accept()
-        print(f"Data connection from {addr}")
 
     def run_spk(self) -> None:
         arr = self.read_from_client()
-        if arr is None:
-            # TODO: how to handle properly connection tear down?
-            # I guess we should wait for a new connection, and re-init in_conn
-            return
-        print(f"Received array {arr}")
 
-        # send back array
-        # TODO: instead, do meaningful computations with another Lava process
-        self.send_to_client(arr)
+        if arr is None:
+            # connect to next client
+            # TODO: doesn't work as the new client would need to call the data management again
+            # TODO: we should rather agree on the fact that an empty message means that we should wait a second time for real data, that will come later
+            print(f"The current client terminated the connection")
+            self.close_current_client_socket()
+            self.wait_for_new_client()
+
+            # re-run run spike with new client
+            self.run_spk(self)
+        else:
+            print(f"Received array {arr}")
+
+            # send back array
+            # TODO: instead, do meaningful computations with another Lava process
+            self.send_to_client(arr)
 
     def send_to_client(self, array: np.ndarray) -> None:
         self.in_conn.sendall(array.tobytes())
 
+    def wait_for_new_client(self) -> None:
+        self.in_conn, addr = self.data_sock.accept()
+        print(f"Data connection from {addr}")
+
     def read_from_client(self) -> np.ndarray:
         arr_bytes = self.in_conn.recv(self.array_msg_len)
         if not arr_bytes:
+
             return None
         else:
             return np.frombuffer(arr_bytes, dtype=self.dtype).reshape(self.shape)
 
-    def close_socket(self) -> None:
-        self.data_sock.shutdown(socket.SHUT_RDWR)
-        self.data_sock.close()
-
-        # TODO: do we really need to shut that down
+    def close_current_client_socket(self) -> None:
         self.in_conn.shutdown(socket.SHUT_RDWR)
         self.in_conn.close()
+
+    def close_data_socket(self) -> None:
+        self.data_sock.shutdown(socket.SHUT_RDWR)
+        self.data_sock.close()
 
     def _req_rs_stop(self) -> None:
         super()._req_rs_stop()
@@ -104,4 +119,7 @@ class PyServerProcess(PyLoihiProcessModel):
         # close the socket
         # TODO: it seems that it is not called for now
         print("Closing the socket")
-        self.close_socket()
+        self.close_data_socket()
+
+        if hasattr(self, "in_conn"):
+            self.close_current_client_socket()

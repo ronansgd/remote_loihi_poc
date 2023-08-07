@@ -12,5 +12,4 @@ if __name__ == "__main__":
         routing.DATA_PORT)
     server.run(condition=RunContinuous(), run_cfg=Loihi2SimCfg())
 
-    # TODO: this line is not reachable
-    server.stop()
+    # server.stop()

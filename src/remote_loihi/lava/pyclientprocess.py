@@ -83,8 +83,7 @@ class PyClientProcess(PyLoihiProcessModel):
         print(f"Received: {read_arr}")
 
     def send_to_server(self, array: np.ndarray) -> None:
-        arr_bytes = array.tobytes()
-        self.data_sock.sendall(arr_bytes)
+        self.data_sock.sendall(array.tobytes())
 
     def read_from_server(self) -> np.ndarray:
         arr_bytes = self.data_sock.recv(self.array_msg_len)
