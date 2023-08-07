@@ -49,23 +49,15 @@ class PyClientProcess(PyLoihiProcessModel):
         print(f"Sent init msg")
 
     def run_spk(self) -> None:
-        # TODO: de-hardcode the number of steps for the termination condition
-        if self.sock is None:
-            return
-        elif self.time_step >= 10:
-            self.close_socket()
-            self.sock = None
-            return
-        else:
-            # send dummy data
-            # TODO: plug with meaningful spike generator
-            arr = np.full(self.shape, self.time_step, self.dtype)
-            self.send_to_server(arr)
-            print(f"Sent {arr}")
+        # send dummy data
+        # TODO: plug with meaningful spike generator
+        arr = np.full(self.shape, self.time_step, self.dtype)
+        self.send_to_server(arr)
+        print(f"Sent {arr}")
 
-            # read returned data
-            read_arr = self.read_from_server()
-            print(f"Received: {read_arr}")
+        # read returned data
+        read_arr = self.read_from_server()
+        print(f"Received: {read_arr}")
 
     def send_to_server(self, array: np.ndarray) -> None:
         arr_bytes = array.tobytes()
@@ -79,3 +71,11 @@ class PyClientProcess(PyLoihiProcessModel):
     def close_socket(self) -> None:
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+
+    def _req_rs_stop(self) -> None:
+        super()._req_rs_stop()
+
+        # close the socket
+        # TODO: it seems that it is not called for now
+        print("Closing the socket")
+        self.close_socket()
