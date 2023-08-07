@@ -16,8 +16,8 @@ if __name__ == '__main__':
     NUM_STEPS = 20
 
     client = _lava.ClientProcess(
-        SHAPE, DTYPE, routing.LOCAL_HOST, routing.PORT)
-    client.run(condition=RunSteps(NUM_STEPS), run_cfg=Loihi2SimCfg())
+        SHAPE, DTYPE, routing.DATA_PORT)
+    # client.run(condition=RunSteps(NUM_STEPS), run_cfg=Loihi2SimCfg())
 
-    print(client.runtime)
-    client.stop()
+    # print(client.runtime)
+    # client.stop()

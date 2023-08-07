@@ -1,4 +1,5 @@
 from .host_port import (
     LOCAL_HOST,
-    PORT
+    DATA_PORT,
+    MGMT_PORT
 )

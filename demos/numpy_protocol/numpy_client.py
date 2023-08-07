@@ -12,7 +12,7 @@ DTYPE = np.int32
 
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((routing.LOCAL_HOST, routing.PORT))
+        s.connect((routing.LOCAL_HOST, routing.DATA_PORT))
 
         # send init message
         init_msg = com_protocol.encode_init_message(DTYPE, SHAPE)

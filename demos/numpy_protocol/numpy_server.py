@@ -8,7 +8,7 @@ from remote_loihi import (
 
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((routing.LOCAL_HOST, routing.PORT))
+        s.bind((routing.LOCAL_HOST, routing.DATA_PORT))
         s.listen()
 
         while True:
