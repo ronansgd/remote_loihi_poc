@@ -2,17 +2,17 @@ import socket
 
 import numpy as np
 
-from remote_loihi import com_protocol
-
-HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 65432  # The port used by the server
+from remote_loihi import (
+    com_protocol,
+    routing
+)
 
 SHAPE = (10,)
 DTYPE = np.int32
 
 if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
+        s.connect((routing.LOCAL_HOST, routing.PORT))
 
         # send init message
         init_msg = com_protocol.encode_init_message(DTYPE, SHAPE)
