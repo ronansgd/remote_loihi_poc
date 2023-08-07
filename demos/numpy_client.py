@@ -2,7 +2,7 @@ import socket
 
 import numpy as np
 
-import _utils
+from remote_loihi import com_protocol
 
 HOST = "127.0.0.1"  # The server's hostname or IP address
 PORT = 65432  # The port used by the server
@@ -15,11 +15,12 @@ if __name__ == "__main__":
         s.connect((HOST, PORT))
 
         # send init message
-        init_msg = _utils.encode_init_message(DTYPE, SHAPE)
+        init_msg = com_protocol.encode_init_message(DTYPE, SHAPE)
         s.sendall(init_msg)
         print(f"Sent init msg")
 
-        array_msg_len = _utils.get_array_bytes_len(DTYPE, SHAPE)
+        # TODO: use proper function for decoding
+        array_msg_len = com_protocol.get_array_bytes_len(DTYPE, SHAPE)
         for i in range(5):
             arr = np.full(SHAPE, i, DTYPE)
             arr_bytes = arr.tobytes()
