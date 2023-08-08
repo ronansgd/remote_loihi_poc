@@ -18,7 +18,7 @@ from remote_loihi import (
 
 
 class ClientProcess(AbstractProcess):
-    def __init__(self, shape: tuple, dtype: np.dtype, port: int, **kwargs) -> None:
+    def __init__(self, shape: tuple, dtype: np.dtype, mgmt_port: int, data_port: int, **kwargs) -> None:
         '''
         Kwargs:
             send_init_msg: bool = True
@@ -32,7 +32,7 @@ class ClientProcess(AbstractProcess):
             # init & connect management socket
             self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             routing.wait_for_server(
-                self.mgmt_sock, routing.LOCAL_HOST, port)
+                self.mgmt_sock, routing.LOCAL_HOST, mgmt_port)
 
             # send desired shape & dtype using management socket
             # NOTE: could later be extended to send other info dynamically
@@ -40,15 +40,10 @@ class ClientProcess(AbstractProcess):
             self.mgmt_sock.sendall(init_msg)
             print(f"Sent dtype & shape: {dtype} {shape}")
 
-            data_port_bytes = self.mgmt_sock.recv(com_protocol.BYTES_PER_INT)
-            data_port = com_protocol.decode_int_iterable(data_port_bytes)[0]
-
             self.mgmt_sock.shutdown(socket.SHUT_RDWR)
             self.mgmt_sock.close()
 
-            super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=data_port)
-        else:
-            super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
+        super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=data_port)
 
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)

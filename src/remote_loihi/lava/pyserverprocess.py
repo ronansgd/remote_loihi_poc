@@ -18,10 +18,10 @@ from remote_loihi import (
 
 
 class ServerProcess(AbstractProcess):
-    def __init__(self, port: int) -> None:
+    def __init__(self, mgmt_port: int, data_port: int) -> None:
         # open management socket and wait for connection
         self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mgmt_sock.bind((routing.LOCAL_HOST, port))
+        self.mgmt_sock.bind((routing.LOCAL_HOST, mgmt_port))
         self.mgmt_sock.listen()
 
         conn, addr = self.mgmt_sock.accept()
@@ -32,13 +32,6 @@ class ServerProcess(AbstractProcess):
             init_msg = conn.recv(com_protocol.INIT_MESSAGE_LEN)
             dtype, shape = com_protocol.decode_init_message(init_msg)
             print(f"Received dtype & shape: {dtype} {shape}")
-
-            # send back a port for the data channel
-            data_port = routing.get_unused_port()
-            print(f"Chosen data port: {data_port}")
-
-            data_port_bytes = com_protocol.encode_int_iterable((data_port,))
-            conn.sendall(data_port_bytes)
 
         self.mgmt_sock.shutdown(socket.SHUT_RDWR)
         self.mgmt_sock.close()
