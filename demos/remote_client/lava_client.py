@@ -22,7 +22,6 @@ if __name__ == '__main__':
     SHAPE = (10,)
     DTYPE = np.int32
 
-    # TODO: de-hardcode the number of steps
     NUM_STEPS = 10
 
     client = _lava.ClientProcess(

@@ -1,5 +1,4 @@
 import socket
-import time
 
 from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.model.py.model import PyLoihiProcessModel
@@ -34,9 +33,9 @@ class ClientProcess(AbstractProcess):
         if kwargs.get("send_init_msg", True):
             # init & connect management socket
             # TODO: de-hardcode port
-            # TODO: spin while server not open
             self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.mgmt_sock.connect((routing.LOCAL_HOST, routing.MGMT_PORT))
+            routing.wait_for_server(
+                self.mgmt_sock, routing.LOCAL_HOST, routing.MGMT_PORT)
 
             # send desired shape & dtype using management socket
             # NOTE: could later be extended to send other info dynamically
@@ -65,18 +64,9 @@ class PyClientProcess(PyLoihiProcessModel):
             self.dtype, self.shape)
 
         # init & connect data socket
-        # TODO: spin why we cannot connect
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        hp_tuple = tuple((self.proc_params[k] for k in ('host', 'port')))
-
-        while True:
-            try:
-                self.data_sock.connect(hp_tuple)
-                break
-            except ConnectionRefusedError:
-                print("One more spin to wait for host...")
-                time.sleep(1.)
-                continue
+        host_port = tuple((self.proc_params[k] for k in ('host', 'port')))
+        routing.wait_for_server(self.data_sock, *host_port)
 
     def run_spk(self) -> None:
         # send dummy data

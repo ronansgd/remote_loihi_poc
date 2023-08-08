@@ -19,7 +19,6 @@ if __name__ == "__main__":
         s.sendall(init_msg)
         print(f"Sent init msg")
 
-        # TODO: use proper function for decoding
         array_msg_len = com_protocol.get_array_bytes_len(DTYPE, SHAPE)
         for i in range(5):
             arr = np.full(SHAPE, i, DTYPE)
