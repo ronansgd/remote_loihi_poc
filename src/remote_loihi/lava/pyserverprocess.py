@@ -33,10 +33,17 @@ class ServerProcess(AbstractProcess):
             dtype, shape = com_protocol.decode_init_message(init_msg)
             print(f"Received dtype & shape: {dtype} {shape}")
 
+            # send back a port for the data channel
+            data_port = routing.get_unused_port()
+            print(f"Chosen data port: {data_port}")
+
+            data_port_bytes = com_protocol.encode_int_iterable((data_port,))
+            conn.sendall(data_port_bytes)
+
         self.mgmt_sock.shutdown(socket.SHUT_RDWR)
         self.mgmt_sock.close()
 
-        super().__init__(port=port, dtype=dtype, shape=shape)
+        super().__init__(port=data_port, dtype=dtype, shape=shape)
 
         # we use the shape with a first message
         self.data = Var(shape=shape, init=0)

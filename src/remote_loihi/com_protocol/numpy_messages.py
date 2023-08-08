@@ -35,10 +35,10 @@ def encode_init_message(dtype: np.dtype, shape: tuple) -> str:
 
 
 def decode_init_message(byte_str: str) -> tuple:
-    dtype_int, ndim = npe.decode_int_series(
+    dtype_int, ndim = npe.decode_int_iterable(
         byte_str[:2 * BYTES_PER_INT], BYTES_PER_INT, ENDIANNESS)
 
-    shape = npe.decode_int_series(
+    shape = npe.decode_int_iterable(
         byte_str[2 * BYTES_PER_INT: (ndim + 2) * BYTES_PER_INT], BYTES_PER_INT, ENDIANNESS)
 
     return INT_TO_DTYPE[dtype_int], shape

@@ -23,11 +23,8 @@ class ClientProcess(AbstractProcess):
         Kwargs:
             send_init_msg: bool = True
                 Flag indicating whether an initialization message should be sent to the server process
-        NOTE: the management & data socket currently work on the same port. It will be necessary
-            to change that it they were to run concurrently.
         '''
         # TODO: factorize proc_params in a single dictionnary
-        super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
         self.data = Var(shape=shape, init=0)
         self.inp = InPort(shape=shape)
 
@@ -43,8 +40,15 @@ class ClientProcess(AbstractProcess):
             self.mgmt_sock.sendall(init_msg)
             print(f"Sent dtype & shape: {dtype} {shape}")
 
+            data_port_bytes = self.mgmt_sock.recv(com_protocol.BYTES_PER_INT)
+            data_port = com_protocol.decode_int_iterable(data_port_bytes)[0]
+
             self.mgmt_sock.shutdown(socket.SHUT_RDWR)
             self.mgmt_sock.close()
+
+            super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=data_port)
+        else:
+            super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
 
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)

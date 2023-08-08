@@ -31,7 +31,7 @@ def encode_int_iterable(integers: ty.Iterable[int], bytes_per_int: int = 4, endi
     return b"".join((i.to_bytes(bytes_per_int, endianness) for i in integers))
 
 
-def decode_int_series(int_series: bytes, bytes_per_int: int = 4, endianness: str = 'little') -> ty.Tuple[int]:
+def decode_int_iterable(int_series: bytes, bytes_per_int: int = 4, endianness: str = 'little') -> ty.Tuple[int]:
     '''
     Args:
         int_series: bytes - A series of int encoded in bytes

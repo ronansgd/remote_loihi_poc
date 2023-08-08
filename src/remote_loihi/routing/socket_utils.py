@@ -1,6 +1,8 @@
 import socket
 import time
 
+import numpy as np
+
 
 def wait_for_server(client_sock: socket.socket, host: str, port: int, wait_dt: float = 1.) -> None:
     '''
