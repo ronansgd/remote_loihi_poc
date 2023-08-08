@@ -38,4 +38,6 @@ Then, in a local bash, run (note that you have to manually copy the generated po
 
 You should see the two sides exchanging basic messages!
 
-*NOTE:  the workflow could be improved in the future using subprocess.Popen*
+Closing notes:
+- This workflow could be improved in the future using subprocess.Popen, which would allow a pure Python solution.
+- The script `forward_port.sh` allows to run the mentioned steps more easily.
