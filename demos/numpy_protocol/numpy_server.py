@@ -1,4 +1,6 @@
+import argparse
 import socket
+
 import numpy as np
 
 from remote_loihi import (
@@ -7,8 +9,16 @@ from remote_loihi import (
 )
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=None)
+
+    args = parser.parse_args()
+    port = args.port
+    assert port is not None and isinstance(
+        port, int), "Please provide a valid port"
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((routing.LOCAL_HOST, routing.DATA_PORT))
+        s.bind((routing.LOCAL_HOST, port))
         s.listen()
 
         while True:
