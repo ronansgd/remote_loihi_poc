@@ -19,26 +19,33 @@ from remote_loihi import (
 
 
 class ClientProcess(AbstractProcess):
-    def __init__(self, shape: tuple, dtype: np.dtype, port: int) -> None:
+    def __init__(self, shape: tuple, dtype: np.dtype, port: int, **kwargs) -> None:
+        '''
+        Kwargs:
+            send_init_msg: bool = True
+                Flag indicating whether an initialization message should be sent to the server process
+
+        '''
         # TODO: factorize proc_params in a single dictionnary
         super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
         self.data = Var(shape=shape, init=0)
         self.inp = InPort(shape=shape)
 
-        # init & connect management socket
-        # TODO: de-hardcode port
-        # TODO: spin while server not open
-        self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mgmt_sock.connect((routing.LOCAL_HOST, routing.MGMT_PORT))
+        if kwargs.get("send_init_msg", True):
+            # init & connect management socket
+            # TODO: de-hardcode port
+            # TODO: spin while server not open
+            self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.mgmt_sock.connect((routing.LOCAL_HOST, routing.MGMT_PORT))
 
-        # send desired shape & dtype using management socket
-        # NOTE: could later be extended to send other info dynamically
-        init_msg = com_protocol.encode_init_message(dtype, shape)
-        self.mgmt_sock.sendall(init_msg)
-        print(f"Sent dtype & shape: {dtype} {shape}")
+            # send desired shape & dtype using management socket
+            # NOTE: could later be extended to send other info dynamically
+            init_msg = com_protocol.encode_init_message(dtype, shape)
+            self.mgmt_sock.sendall(init_msg)
+            print(f"Sent dtype & shape: {dtype} {shape}")
 
-        self.mgmt_sock.shutdown(socket.SHUT_RDWR)
-        self.mgmt_sock.close()
+            self.mgmt_sock.shutdown(socket.SHUT_RDWR)
+            self.mgmt_sock.close()
 
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)

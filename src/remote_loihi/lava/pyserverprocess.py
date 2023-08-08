@@ -74,15 +74,14 @@ class PyServerProcess(PyLoihiProcessModel):
         arr = self.read_from_client()
 
         if arr is None:
-            # connect to next client
-            # TODO: doesn't work as the new client would need to call the data management again
-            # TODO: we should rather agree on the fact that an empty message means that we should wait a second time for real data, that will come later
             print(f"The current client terminated the connection")
+
+            # connect to next client
             self.close_current_client_socket()
             self.wait_for_new_client()
 
             # re-run run spike with new client
-            self.run_spk(self)
+            self.run_spk()
         else:
             print(f"Received array {arr}")
 
