@@ -21,7 +21,7 @@ class ServerProcess(AbstractProcess):
     def __init__(self, port: int) -> None:
         # open management socket and wait for connection
         self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mgmt_sock.bind((routing.LOCAL_HOST, routing.MGMT_PORT))
+        self.mgmt_sock.bind((routing.LOCAL_HOST, port))
         self.mgmt_sock.listen()
 
         conn, addr = self.mgmt_sock.accept()
@@ -36,7 +36,7 @@ class ServerProcess(AbstractProcess):
         self.mgmt_sock.shutdown(socket.SHUT_RDWR)
         self.mgmt_sock.close()
 
-        super().__init__(host=routing.LOCAL_HOST, port=port, dtype=dtype, shape=shape)
+        super().__init__(port=port, dtype=dtype, shape=shape)
 
         # we use the shape with a first message
         self.data = Var(shape=shape, init=0)
@@ -56,13 +56,13 @@ class PyServerProcess(PyLoihiProcessModel):
 
         # unpack proc params
         self.dtype, self.shape = (
-            self.proc_params[k] for k in ('dtype', 'shape'))
+            self.proc_params[k] for k in ("dtype", "shape"))
         self.array_msg_len = com_protocol.get_array_bytes_len(
             self.dtype, self.shape)
 
-        # init data socket & wait for connection
+        # init data socket & start listening
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.bind((routing.LOCAL_HOST, routing.DATA_PORT))
+        self.data_sock.bind((routing.LOCAL_HOST, self.proc_params["port"]))
         self.data_sock.listen()
 
         # wait for first client

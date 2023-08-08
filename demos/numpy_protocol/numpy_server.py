@@ -14,8 +14,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     port = args.port
-    assert port is not None and isinstance(
-        port, int), "Please provide a valid port"
+    assert port is not None and \
+        isinstance(port, int), "Please provide a valid port via the --port flag"
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((routing.LOCAL_HOST, port))

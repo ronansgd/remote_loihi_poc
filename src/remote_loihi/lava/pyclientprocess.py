@@ -23,7 +23,8 @@ class ClientProcess(AbstractProcess):
         Kwargs:
             send_init_msg: bool = True
                 Flag indicating whether an initialization message should be sent to the server process
-
+        NOTE: the management & data socket currently work on the same port. It will be necessary
+            to change that it they were to run concurrently.
         '''
         # TODO: factorize proc_params in a single dictionnary
         super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
@@ -32,10 +33,9 @@ class ClientProcess(AbstractProcess):
 
         if kwargs.get("send_init_msg", True):
             # init & connect management socket
-            # TODO: de-hardcode port
             self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             routing.wait_for_server(
-                self.mgmt_sock, routing.LOCAL_HOST, routing.MGMT_PORT)
+                self.mgmt_sock, routing.LOCAL_HOST, port)
 
             # send desired shape & dtype using management socket
             # NOTE: could later be extended to send other info dynamically
