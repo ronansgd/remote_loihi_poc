@@ -18,7 +18,7 @@ $ echo $LOIHI_PORT
 ```
 Then, we start a ssh session forwarding the generated port id:
 ```
-$ ssh -t -L $LOIHI_PORT:127.0.0.1:$LOIHI_PORT your_username@ncl-com.research.intel-research.net ncl-com "export LOIHI_PORT=$LOIHI_PORT; bash -l"
+$ ssh -t -L $LOIHI_PORT:127.0.0.1:$LOIHI_PORT your_username@ncl-com.research.intel-research.net "export LOIHI_PORT=$LOIHI_PORT; bash -l"
 ```
 Side notes: 
 - don't forget to set your username.
