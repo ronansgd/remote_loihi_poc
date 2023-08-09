@@ -8,8 +8,8 @@ from remote_loihi import (
     routing
 )
 
-SHAPE = (10,)
 DTYPE = np.int32
+SHAPE = (10,)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -24,9 +24,13 @@ if __name__ == "__main__":
         s.connect((routing.LOCAL_HOST, port))
 
         # send init message
-        init_msg = com_protocol.encode_init_message(DTYPE, SHAPE)
-        s.sendall(init_msg)
-        print(f"Sent init msg")
+        dtype_ndim_bytes = com_protocol.encode_dtype_ndim(
+            DTYPE, len(SHAPE))
+        s.sendall(dtype_ndim_bytes)
+
+        shape_bytes = com_protocol.encode_shape(SHAPE)
+        s.sendall(shape_bytes)
+        print(f"Sent dtype & shape")
 
         array_msg_len = com_protocol.get_array_bytes_len(DTYPE, SHAPE)
         for i in range(5):

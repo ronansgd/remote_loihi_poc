@@ -44,6 +44,8 @@ class ClientProcess(AbstractProcess):
                 shape_bytes = com_protocol.encode_shape(shape)
                 mgmt_conn.sendall(shape_bytes)
 
+                print(f"Sent dtype & shape: {dtype} {shape}")
+
                 # wait for server being done
                 mgmt_conn.recv(1)
 
