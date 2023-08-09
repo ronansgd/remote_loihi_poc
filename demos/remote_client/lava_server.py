@@ -18,5 +18,3 @@ if __name__ == "__main__":
 
     server = _lava.ServerProcess(port)
     server.run(condition=RunContinuous(), run_cfg=Loihi2SimCfg())
-
-    # server.stop()

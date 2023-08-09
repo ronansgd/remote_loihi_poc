@@ -11,7 +11,7 @@ from remote_loihi import (
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # Should we init the remote server?
+    # should we send shape & dtype to the remote server?
     parser.add_argument('--remote-init', dest="remote_init",
                         action="store_true")
     parser.add_argument("--no-remote-init", dest="remote_init",
@@ -28,11 +28,10 @@ if __name__ == '__main__':
 
     SHAPE = (10,)
     DTYPE = np.int32
-
-    NUM_STEPS = 10
-
     client = _lava.ClientProcess(
         SHAPE, DTYPE, port, send_init_msg=send_init_msg)
-    for _ in range(4):
-        client.run(condition=RunSteps(NUM_STEPS), run_cfg=Loihi2SimCfg())
+
+    n_runs, n_steps = 4, 10
+    for _ in range(n_runs):
+        client.run(condition=RunSteps(n_steps), run_cfg=Loihi2SimCfg())
     client.stop()
