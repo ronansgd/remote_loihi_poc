@@ -12,9 +12,10 @@ from remote_loihi import (
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Should we init the remote server?
-    parser.add_argument('--remote_init', action="store_true")
-    parser.add_argument("--no_remote_init",
-                        dest="remote_init", action="store_false")
+    parser.add_argument('--remote-init', dest="remote_init",
+                        action="store_true")
+    parser.add_argument("--no-remote-init", dest="remote_init",
+                        action="store_false")
     parser.set_defaults(remote_init=True)
     # which port should we try to connect to?
     parser.add_argument('--port', type=int, default=None)

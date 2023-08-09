@@ -33,18 +33,14 @@ class ClientProcess(AbstractProcess):
 
         if kwargs.get("send_init_msg", True):
             # init & connect management socket
-            self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            routing.wait_for_server(
-                self.mgmt_sock, routing.LOCAL_HOST, port)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as mgmt_sock:
+                routing.wait_for_server(mgmt_sock, routing.LOCAL_HOST, port)
 
-            # send desired shape & dtype using management socket
-            # NOTE: could later be extended to send other info dynamically
-            init_msg = com_protocol.encode_init_message(dtype, shape)
-            self.mgmt_sock.sendall(init_msg)
-            print(f"Sent dtype & shape: {dtype} {shape}")
-
-            self.mgmt_sock.shutdown(socket.SHUT_RDWR)
-            self.mgmt_sock.close()
+                # send desired shape & dtype using management socket
+                # NOTE: could later be extended to send other info dynamically
+                init_msg = com_protocol.encode_init_message(dtype, shape)
+                mgmt_sock.sendall(init_msg)
+                print(f"Sent dtype & shape: {dtype} {shape}")
 
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)

@@ -19,22 +19,21 @@ from remote_loihi import (
 
 class ServerProcess(AbstractProcess):
     def __init__(self, port: int) -> None:
-        # open management socket and wait for connection
-        self.mgmt_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.mgmt_sock.bind((routing.LOCAL_HOST, port))
-        self.mgmt_sock.listen()
 
-        conn, addr = self.mgmt_sock.accept()
-        print(f"Management connection from {addr}")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as mgmt_sock:
+            # open management socket and wait for connection
+            mgmt_sock.bind((routing.LOCAL_HOST, port))
+            mgmt_sock.listen()
 
-        with conn:
+            # first connection received -> we can close the listening socket
+            mgmt_conn, mgmt_addr = mgmt_sock.accept()
+            print(f"Management connection from {mgmt_addr}")
+
+        with mgmt_conn:
             # read dtype & shape from input connection
-            init_msg = conn.recv(com_protocol.INIT_MESSAGE_LEN)
+            init_msg = mgmt_conn.recv(com_protocol.INIT_MESSAGE_LEN)
             dtype, shape = com_protocol.decode_init_message(init_msg)
             print(f"Received dtype & shape: {dtype} {shape}")
-
-        self.mgmt_sock.shutdown(socket.SHUT_RDWR)
-        self.mgmt_sock.close()
 
         super().__init__(port=port, dtype=dtype, shape=shape)
 
