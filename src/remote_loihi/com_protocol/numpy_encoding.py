@@ -18,7 +18,7 @@ def get_array_bytes_len(dtype: np.dtype, shape: tuple) -> int:
     return np.dtype(dtype).itemsize * np.prod(shape, dtype=np.int64)
 
 
-def encode_int_iterable(integers: ty.Iterable[int], bytes_per_int: int = 4, endianness: str = 'little') -> bytes:
+def encode_int_iterable(integers: ty.Union[ty.Iterable[int], int], bytes_per_int: int = 4, endianness: str = 'little') -> bytes:
     '''
     Args:
         integers: Iterable[int] - A series of int
@@ -28,6 +28,8 @@ def encode_int_iterable(integers: ty.Iterable[int], bytes_per_int: int = 4, endi
         A byte string containing a concatenation of the byte encoding
         of the elements of 'integers'.
     '''
+    if isinstance(integers, int):
+        integers = integers,
     return b"".join((i.to_bytes(bytes_per_int, endianness) for i in integers))
 
 

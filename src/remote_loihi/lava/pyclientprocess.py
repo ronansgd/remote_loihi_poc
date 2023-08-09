@@ -42,6 +42,9 @@ class ClientProcess(AbstractProcess):
                 mgmt_sock.sendall(init_msg)
                 print(f"Sent dtype & shape: {dtype} {shape}")
 
+                # wait for server being done
+                mgmt_sock.recv(1)
+
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)
 @requires(CPU)
