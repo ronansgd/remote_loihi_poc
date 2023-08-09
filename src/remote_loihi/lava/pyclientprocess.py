@@ -26,7 +26,6 @@ class ClientProcess(AbstractProcess):
         NOTE: the management & data socket currently work on the same port. It will be necessary
             to change that it they were to run concurrently.
         '''
-        # TODO: factorize proc_params in a single dictionnary
         super().__init__(shape=shape, dtype=dtype, port=port)
         self.data = Var(shape=shape, init=0)
         self.inp = InPort(shape=shape)
@@ -37,10 +36,13 @@ class ClientProcess(AbstractProcess):
                 routing.wait_for_server(mgmt_conn, routing.LOCAL_HOST, port)
 
                 # send desired shape & dtype using management socket
-                # NOTE: could later be extended to send other info dynamically
-                init_msg = com_protocol.encode_init_message(dtype, shape)
-                mgmt_conn.sendall(init_msg)
-                print(f"Sent dtype & shape: {dtype} {shape}")
+                # NOTE: could be extended to send other info dynamically
+                dtype_ndim_bytes = com_protocol.encode_dtype_ndim(
+                    dtype, len(shape))
+                mgmt_conn.sendall(dtype_ndim_bytes)
+
+                shape_bytes = com_protocol.encode_shape(shape)
+                mgmt_conn.sendall(shape_bytes)
 
                 # wait for server being done
                 mgmt_conn.recv(1)
@@ -64,7 +66,6 @@ class PyClientProcess(PyLoihiProcessModel):
 
         # init & connect data socket
         self.data_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # TODO: is this wait still necessary?
         routing.wait_for_server(self.data_conn, routing.LOCAL_HOST, port)
 
     def run_spk(self) -> None:
@@ -81,8 +82,9 @@ class PyClientProcess(PyLoihiProcessModel):
         print(f"Received: {read_arr}")
 
     def _req_rs_stop(self) -> None:
+        # NOTE: it seems that this callback is not called on .stop()
+
         super()._req_rs_stop()
 
-        # TODO: it seems that it is not called for now
         print("Closing the socket")
         self.data_conn.close()

@@ -27,7 +27,7 @@ if __name__ == "__main__":
                 print(f"Connected by {addr}")
 
                 # recv init message
-                init_msg = conn.recv(com_protocol.INIT_MESSAGE_LEN)
+                init_msg = conn.recv(com_protocol.INIT_MSG_LEN)
                 dtype, shape = com_protocol.decode_init_message(init_msg)
                 array_msg_len = com_protocol.get_array_bytes_len(dtype, shape)
 

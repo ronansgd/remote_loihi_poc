@@ -33,8 +33,12 @@ class ServerProcess(AbstractProcess):
         print(f"Management connection from {mgmt_addr}")
 
         # read dtype & shape from management connection
-        init_msg = mgmt_conn.recv(com_protocol.INIT_MESSAGE_LEN)
-        dtype, shape = com_protocol.decode_init_message(init_msg)
+        dtype_ndim_bytes = mgmt_conn.recv(2 * com_protocol.BYTES_PER_INT)
+        dtype, ndim = com_protocol.decode_dtype_ndim(dtype_ndim_bytes)
+
+        shape_bytes = mgmt_conn.recv(ndim * com_protocol.BYTES_PER_INT)
+        shape = com_protocol.decode_shape(shape_bytes)
+
         print(f"Received dtype & shape: {dtype} {shape}")
 
         # NOTE: one could sustain the connection for dynamical reconfig at runtime
