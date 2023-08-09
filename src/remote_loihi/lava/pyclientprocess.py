@@ -88,10 +88,10 @@ class PyClientProcess(PyLoihiProcessModel):
             arr_bytes, dtype=self.dtype).reshape(self.in_shape)
         print(f"Received: {read_arr}")
 
-    def _req_rs_stop(self) -> None:
-        # NOTE: it seems that this callback is not called on .stop()
+    # def _req_rs_stop(self) -> None:
+    #     # NOTE: it seems that this callback is not called on .stop()
 
-        super()._req_rs_stop()
+    #     super()._req_rs_stop()
 
-        print("Closing the socket")
-        self.data_conn.close()
+    #     print("Closing the socket")
+    #     self.data_conn.close()

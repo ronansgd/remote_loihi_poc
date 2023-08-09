@@ -27,9 +27,9 @@ if __name__ == '__main__':
         isinstance(port, int), "Please provide a valid port via the --port flag"
 
     dtype = np.int32
-    in_shape = (10,)
+    in_shape, out_shape = (10,), (5,)
     client = _lava.ClientProcess(
-        port, dtype, in_shape, send_init_msg=send_init_msg)
+        port, dtype, in_shape, out_shape, send_init_msg=send_init_msg)
 
     n_runs, n_steps = 4, 10
     for _ in range(n_runs):

@@ -98,12 +98,12 @@ class PyServerProcess(PyLoihiProcessModel):
         self.data_conn, addr = self.server_sock.accept()
         print(f"New data connection from {addr}")
 
-    def _req_rs_stop(self) -> None:
-        # NOTE: it seems that this callback is not called on .stop()
+    # def _req_rs_stop(self) -> None:
+    #     # NOTE: it seems that this callback is not called on .stop()
 
-        super()._req_rs_stop()
+    #     super()._req_rs_stop()
 
-        print("Closing open sockets")
-        self.server_sock.close()
-        if hasattr(self, "data_conn"):
-            self.data_conn.close()
+    #     print("Closing open sockets")
+    #     self.server_sock.close()
+    #     if hasattr(self, "data_conn"):
+    #         self.data_conn.close()
