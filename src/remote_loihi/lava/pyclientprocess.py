@@ -27,23 +27,23 @@ class ClientProcess(AbstractProcess):
             to change that it they were to run concurrently.
         '''
         # TODO: factorize proc_params in a single dictionnary
-        super().__init__(shape=shape, dtype=dtype, host=routing.LOCAL_HOST, port=port)
+        super().__init__(shape=shape, dtype=dtype, port=port)
         self.data = Var(shape=shape, init=0)
         self.inp = InPort(shape=shape)
 
         if kwargs.get("send_init_msg", True):
             # init & connect management socket
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as mgmt_sock:
-                routing.wait_for_server(mgmt_sock, routing.LOCAL_HOST, port)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as mgmt_conn:
+                routing.wait_for_server(mgmt_conn, routing.LOCAL_HOST, port)
 
                 # send desired shape & dtype using management socket
                 # NOTE: could later be extended to send other info dynamically
                 init_msg = com_protocol.encode_init_message(dtype, shape)
-                mgmt_sock.sendall(init_msg)
+                mgmt_conn.sendall(init_msg)
                 print(f"Sent dtype & shape: {dtype} {shape}")
 
                 # wait for server being done
-                mgmt_sock.recv(1)
+                mgmt_conn.recv(1)
 
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)
@@ -57,43 +57,32 @@ class PyClientProcess(PyLoihiProcessModel):
         super().__init__(proc_params=proc_params)
 
         # unpack proc params
-        self.dtype, self.shape = (
-            self.proc_params[k] for k in ('dtype', 'shape'))
+        self.dtype, self.shape, port = (
+            self.proc_params[k] for k in ('dtype', 'shape', 'port'))
         self.array_msg_len = com_protocol.get_array_bytes_len(
             self.dtype, self.shape)
 
         # init & connect data socket
-        self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host_port = tuple((self.proc_params[k] for k in ('host', 'port')))
-        routing.wait_for_server(self.data_sock, *host_port)
+        self.data_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # TODO: is this wait still necessary?
+        routing.wait_for_server(self.data_conn, routing.LOCAL_HOST, port)
 
     def run_spk(self) -> None:
         # send dummy data
         # TODO: plug with meaningful spike generator
         arr = np.full(self.shape, self.time_step, self.dtype)
-        self.send_to_server(arr)
+        self.data_conn.sendall(arr.tobytes())
         print(f"Sent {arr}")
 
         # read returned data
-        read_arr = self.read_from_server()
+        arr_bytes = self.data_conn.recv(self.array_msg_len)
+        read_arr = np.frombuffer(
+            arr_bytes, dtype=self.dtype).reshape(self.shape)
         print(f"Received: {read_arr}")
-
-    def send_to_server(self, array: np.ndarray) -> None:
-        self.data_sock.sendall(array.tobytes())
-
-    def read_from_server(self) -> np.ndarray:
-        arr_bytes = self.data_sock.recv(self.array_msg_len)
-
-        return np.frombuffer(arr_bytes, dtype=self.dtype).reshape(self.shape)
-
-    def close_socket(self) -> None:
-        self.data_sock.shutdown(socket.SHUT_RDWR)
-        self.data_sock.close()
 
     def _req_rs_stop(self) -> None:
         super()._req_rs_stop()
 
-        # close the socket
         # TODO: it seems that it is not called for now
         print("Closing the socket")
-        self.close_socket()
+        self.data_conn.close()
