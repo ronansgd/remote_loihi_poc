@@ -2,6 +2,7 @@ import argparse
 
 from lava.magma.core.run_conditions import RunContinuous
 from lava.magma.core.run_configs import Loihi2SimCfg
+from lava.proc.dense.process import Dense
 import numpy as np
 
 from remote_loihi import (
@@ -19,7 +20,18 @@ if __name__ == "__main__":
 
     server = _lava.ServerProcess(port)
 
+    dense_shape = (int(np.prod(server.inp.shape)),
+                   int(np.prod(server.outp.shape)))
+
     # TODO: create dense process...
-    dense_weights = np.zeros(())
+    dense_weights = np.zeros(dense_shape, dtype=server.dtype)
+    min_size = min(*dense_shape)
+    dense_weights[:min_size, :min_size] = 1
+
+    dense_proc = Dense(weights=dense_weights)
+
+    # connect server process and dense
+    server.outp.reshape(new_shape=dense_shape[1:]).connect(dense_proc.s_in)
+    dense_proc.a_out.reshape(new_shape=server.inp.shape).connect(server.inp)
 
     server.run(condition=RunContinuous(), run_cfg=Loihi2SimCfg())

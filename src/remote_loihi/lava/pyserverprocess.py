@@ -50,6 +50,7 @@ class ServerProcess(AbstractProcess):
 
         # use received config to set the process parameters
         super().__init__(server_sock=server_sock, dtype=dtype, **shapes)
+        self.dtype = dtype
 
         # NOTE: in / out is w.r.t. the client process, therefore the following inversion with the ports
         self.inp = InPort(shape=shapes["out_shape"])
