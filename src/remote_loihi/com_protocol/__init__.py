@@ -4,8 +4,8 @@ from .numpy_encoding import (
 )
 from .messages import (
     BYTES_PER_INT,
-    decode_dtype_ndim,
+    decode_dtype_ndims,
     decode_shape,
-    encode_dtype_ndim,
+    encode_dtype_ndims,
     encode_shape,
 )

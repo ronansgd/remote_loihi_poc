@@ -27,8 +27,9 @@ if __name__ == "__main__":
                 print(f"Connected by {addr}")
 
                 # recv init message
-                dtype_ndim_bytes = conn.recv(2 * com_protocol.BYTES_PER_INT)
-                dtype, ndim = com_protocol.decode_dtype_ndim(dtype_ndim_bytes)
+                dtype_ndim_bytes = conn.recv(3 * com_protocol.BYTES_PER_INT)
+                dtype, ndim, _ = com_protocol.decode_dtype_ndims(
+                    dtype_ndim_bytes)
 
                 shape_bytes = conn.recv(ndim * com_protocol.BYTES_PER_INT)
                 shape = com_protocol.decode_shape(shape_bytes)

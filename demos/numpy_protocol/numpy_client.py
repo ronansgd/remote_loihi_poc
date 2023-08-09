@@ -24,8 +24,8 @@ if __name__ == "__main__":
         s.connect((routing.LOCAL_HOST, port))
 
         # send init message
-        dtype_ndim_bytes = com_protocol.encode_dtype_ndim(
-            DTYPE, len(SHAPE))
+        dtype_ndim_bytes = com_protocol.encode_dtype_ndims(
+            DTYPE, len(SHAPE), len(SHAPE))
         s.sendall(dtype_ndim_bytes)
 
         shape_bytes = com_protocol.encode_shape(SHAPE)

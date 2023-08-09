@@ -2,11 +2,10 @@ import socket
 
 from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.model.py.model import PyLoihiProcessModel
-from lava.magma.core.model.py.ports import PyInPort
+from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.model.py.type import LavaPyType
-from lava.magma.core.process.variable import Var
 from lava.magma.core.process.process import AbstractProcess
-from lava.magma.core.process.ports.ports import InPort
+from lava.magma.core.process.ports.ports import InPort, OutPort
 from lava.magma.core.resources import CPU
 from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 import numpy as np
@@ -18,6 +17,8 @@ from remote_loihi import (
 
 
 class ServerProcess(AbstractProcess):
+    SHAPE_KEYS = ("in_shape", "out_shape")
+
     def __init__(self, local_port: int) -> None:
         '''
         Args:
@@ -32,40 +33,44 @@ class ServerProcess(AbstractProcess):
         mgmt_conn, mgmt_addr = server_sock.accept()
         print(f"Management connection from {mgmt_addr}")
 
-        # read dtype & shape from management connection
-        dtype_ndim_bytes = mgmt_conn.recv(2 * com_protocol.BYTES_PER_INT)
-        dtype, ndim = com_protocol.decode_dtype_ndim(dtype_ndim_bytes)
+        # read dtype, input shape & output shape from management connection
+        dtype_ndims_bytes = mgmt_conn.recv(3 * com_protocol.BYTES_PER_INT)
+        dtype, *ndims = com_protocol.decode_dtype_ndims(dtype_ndims_bytes)
 
-        shape_bytes = mgmt_conn.recv(ndim * com_protocol.BYTES_PER_INT)
-        shape = com_protocol.decode_shape(shape_bytes)
+        shapes = {}
+        for ndim, key in zip(ndims, self.SHAPE_KEYS):
+            shape_bytes = mgmt_conn.recv(ndim * com_protocol.BYTES_PER_INT)
+            shapes[key] = com_protocol.decode_shape(shape_bytes)
 
-        print(f"Received dtype & shape: {dtype} {shape}")
+        print(
+            f"Received dtype & shapes: {dtype} {shapes['in_shape']} {shapes['out_shape']}")
 
         # NOTE: one could sustain the connection for dynamical reconfig at runtime
         mgmt_conn.close()
 
         # use received config to set the process parameters
-        super().__init__(dtype=dtype, shape=shape, server_sock=server_sock)
-        self.data = Var(shape=shape, init=0)
-        self.inp = InPort(shape=shape)
+        super().__init__(server_sock=server_sock, dtype=dtype, **shapes)
+
+        # NOTE: in / out is w.r.t. the client process, therefore the following inversion with the ports
+        self.inp = InPort(shape=shapes["out_shape"])
+        self.outp = OutPort(shape=shapes["in_shape"])
 
 
 @implements(proc=ServerProcess, protocol=LoihiProtocol)
 @requires(CPU)
 @tag('floating_pt')
 class PyServerProcess(PyLoihiProcessModel):
-    # TODO: add ports to communicate with other lava processes
     inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, float)
-    data: np.ndarray = LavaPyType(np.ndarray, float)
+    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, float)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
 
         # unpack process params
-        self.dtype, self.shape, self.server_sock = (self.proc_params[k]
-                                                    for k in ("dtype", "shape", "server_sock"))
+        self.server_sock, self.dtype, self.in_shape = (
+            self.proc_params[k] for k in ("server_sock", "dtype", "in_shape"))
         self.array_msg_len = com_protocol.get_array_bytes_len(
-            self.dtype, self.shape)
+            self.dtype, self.in_shape)
 
         self.wait_for_data_conn()
 
@@ -82,7 +87,7 @@ class PyServerProcess(PyLoihiProcessModel):
             self.run_spk()
         else:
             arr = np.frombuffer(
-                arr_bytes, dtype=self.dtype).reshape(self.shape)
+                arr_bytes, dtype=self.dtype).reshape(self.in_shape)
             print(f"Received array {arr}")
 
             # send back array

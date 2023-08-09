@@ -46,8 +46,5 @@ def decode_int_series(int_series: bytes, bytes_per_int: int = 4, endianness: str
     int_count, should_be_zero = divmod(len(int_series), bytes_per_int)
     assert should_be_zero == 0, "Length of bytes doesn't match the number of bytes per int"
 
-    if int_count == 1:
-        return int.from_bytes(int_series, endianness)
-    else:
-        return tuple((int.from_bytes(int_series[idx * bytes_per_int: (idx + 1) * bytes_per_int], endianness)
-                      for idx in range(int_count)))
+    return tuple((int.from_bytes(int_series[idx * bytes_per_int: (idx + 1) * bytes_per_int], endianness)
+                  for idx in range(int_count)))
