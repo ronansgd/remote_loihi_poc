@@ -21,14 +21,6 @@ if __name__ == "__main__":
         isinstance(port, int), "Please provide a valid port via the --port flag"
 
     server = _lava.ServerProcess(port)
-
-    # NOTE: small hack to avoid weird bug when socket is not closed properly after Ctrl+C
-    def signal_handler(sig, frame):
-        print('You pressed Ctrl+C!')
-        server.server_sock.close()
-        sys.exit(0)
-    signal.signal(signal.SIGINT, signal_handler)
-
     dense_shape = tuple((int(np.prod(s))
                         for s in (server.in_port.shape, server.out_port.shape)))
 
