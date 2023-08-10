@@ -91,7 +91,7 @@ class PyServerProcess(PyLoihiProcessModel):
             # send remote input out
             in_arr = np.frombuffer(
                 in_arr_bytes, dtype=self.dtype).reshape(self.in_shape)
-            print(f"Received array {in_arr}")
+            print(f"{self.time_step}: forwarding array {in_arr}")
             # TODO: should we cast to the port type>
             self.outp.send(in_arr)
 
@@ -99,7 +99,7 @@ class PyServerProcess(PyLoihiProcessModel):
             # TODO: is there a better way to align port type & class dtype?
             out_arr = self.inp.recv().astype(self.dtype)
             self.data_conn.sendall(out_arr.tobytes())
-            print(f"Sent array {out_arr}")
+            print(f"{self.time_step}: received back array {out_arr}")
 
     def wait_for_data_conn(self) -> None:
         self.data_conn, addr = self.server_sock.accept()
