@@ -1,6 +1,4 @@
 import argparse
-import signal
-import sys
 
 from lava.magma.core.run_conditions import RunContinuous
 from lava.magma.core.run_configs import Loihi2SimCfg
