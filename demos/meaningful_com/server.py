@@ -26,7 +26,9 @@ if __name__ == "__main__":
     # TODO: create dense process...
     dense_weights = np.zeros(dense_shape, dtype=server.dtype)
     min_size = min(*dense_shape)
-    dense_weights[:min_size, :min_size] = 1
+    dense_weights[np.arange(min_size), np.arange(min_size)] = 2
+
+    print(dense_weights)
 
     dense_proc = Dense(weights=dense_weights)
 
@@ -34,4 +36,6 @@ if __name__ == "__main__":
     server.outp.reshape(new_shape=dense_shape[1:]).connect(dense_proc.s_in)
     dense_proc.a_out.reshape(new_shape=server.inp.shape).connect(server.inp)
 
-    server.run(condition=RunContinuous(), run_cfg=Loihi2SimCfg())
+    # TODO: adapt tag to input dtype
+    server.run(condition=RunContinuous(),
+               run_cfg=Loihi2SimCfg(select_tag="fixed_pt"))

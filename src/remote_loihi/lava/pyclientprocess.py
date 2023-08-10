@@ -28,7 +28,7 @@ class ClientProcess(AbstractProcess):
         '''
         out_shape = in_shape if out_shape is None else out_shape
 
-        super().__init__(port=com_port, dtype=dtype, in_shape=in_shape)
+        super().__init__(port=com_port, dtype=dtype, in_shape=in_shape, out_shape=out_shape)
 
         self.inp = InPort(shape=in_shape)
         self.outp = OutPort(shape=out_shape)
@@ -41,6 +41,7 @@ class ClientProcess(AbstractProcess):
 
                 # send desired shape & dtype using management socket
                 # NOTE: could be extended to send other info dynamically
+                # NOTE: we could one input dtype and one output dtype
                 dtype_ndim_bytes = com_protocol.encode_dtype_ndims(
                     dtype, len(in_shape), len(out_shape))
                 mgmt_conn.sendall(dtype_ndim_bytes)
@@ -57,17 +58,17 @@ class ClientProcess(AbstractProcess):
 
 @implements(proc=ClientProcess, protocol=LoihiProtocol)
 @requires(CPU)
-@tag('floating_pt')
+@tag('fixed_pt')
 class PyClientProcess(PyLoihiProcessModel):
-    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, float)
-    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, float)
+    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
+    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
 
         # unpack proc params
-        port, self.dtype, self.in_shape = (
-            self.proc_params[k] for k in ("port", "dtype", "in_shape"))
+        port, self.dtype, self.in_shape, self.out_shape = (
+            self.proc_params[k] for k in ("port", "dtype", "in_shape", "out_shape"))
         self.array_msg_len = com_protocol.get_array_bytes_len(
             self.dtype, self.in_shape)
 
@@ -78,14 +79,16 @@ class PyClientProcess(PyLoihiProcessModel):
     def run_spk(self) -> None:
         # send dummy data
         # TODO: plug with meaningful spike generator
-        arr = np.full(self.in_shape, self.time_step, self.dtype)
+        arr = np.zeros(self.in_shape, self.dtype)
+        arr[:self.time_step % self.in_shape[0]] = 1
+
         self.data_conn.sendall(arr.tobytes())
         print(f"Sent {arr}")
 
         # read returned data
         arr_bytes = self.data_conn.recv(self.array_msg_len)
         read_arr = np.frombuffer(
-            arr_bytes, dtype=self.dtype).reshape(self.in_shape)
+            arr_bytes, dtype=self.dtype).reshape(self.out_shape)
         print(f"Received: {read_arr}")
 
     # def _req_rs_stop(self) -> None:

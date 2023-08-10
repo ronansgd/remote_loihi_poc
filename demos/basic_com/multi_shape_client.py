@@ -33,5 +33,7 @@ if __name__ == '__main__':
 
     n_runs, n_steps = 4, 10
     for _ in range(n_runs):
-        client.run(condition=RunSteps(n_steps), run_cfg=Loihi2SimCfg())
+        # TODO: de-hardcode tag
+        client.run(condition=RunSteps(n_steps),
+                   run_cfg=Loihi2SimCfg(select_tag="fixed_pt"))
     client.stop()

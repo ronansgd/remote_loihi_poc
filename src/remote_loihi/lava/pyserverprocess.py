@@ -59,10 +59,10 @@ class ServerProcess(AbstractProcess):
 
 @implements(proc=ServerProcess, protocol=LoihiProtocol)
 @requires(CPU)
-@tag('floating_pt')
+@tag('fixed_pt')
 class PyServerProcess(PyLoihiProcessModel):
-    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, float)
-    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, float)
+    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
+    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
@@ -76,9 +76,9 @@ class PyServerProcess(PyLoihiProcessModel):
         self.wait_for_data_conn()
 
     def run_spk(self) -> None:
-        arr_bytes = self.data_conn.recv(self.array_msg_len)
+        in_arr_bytes = self.data_conn.recv(self.array_msg_len)
 
-        if not arr_bytes:
+        if not in_arr_bytes:
             print(f"The current client terminated the connection")
             self.data_conn.close()
 
@@ -87,13 +87,18 @@ class PyServerProcess(PyLoihiProcessModel):
             # re-run run spike with new data connection
             self.run_spk()
         else:
-            arr = np.frombuffer(
-                arr_bytes, dtype=self.dtype).reshape(self.in_shape)
-            print(f"Received array {arr}")
+            # send remote input out
+            in_arr = np.frombuffer(
+                in_arr_bytes, dtype=self.dtype).reshape(self.in_shape)
+            print(f"Received array {in_arr}")
+            # TODO: should we cast to the port type>
+            self.outp.send(in_arr)
 
-            # send back array
-            # TODO: instead, do meaningful computations with another Lava process
-            self.data_conn.sendall(arr.tobytes())
+            # send back local input
+            # TODO: is there a better way to align port type & class dtype?
+            out_arr = self.inp.recv().astype(self.dtype)
+            self.data_conn.sendall(out_arr.tobytes())
+            print(f"Sent array {out_arr}")
 
     def wait_for_data_conn(self) -> None:
         self.data_conn, addr = self.server_sock.accept()
