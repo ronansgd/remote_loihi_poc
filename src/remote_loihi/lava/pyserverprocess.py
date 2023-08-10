@@ -44,7 +44,7 @@ class ServerProcess(AbstractProcess):
                     print(f"Maximal number of binding attempts reached, exiting...")
                     sys.exit(1)
                 time.sleep(sleep_dt)
-        print(f"Binding attempt {n} succeeded")
+        print(f"Binding attempt {n+1} succeeded")
 
         self.server_sock.listen()
 
