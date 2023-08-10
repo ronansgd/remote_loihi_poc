@@ -25,12 +25,12 @@ class ServerProcess(AbstractProcess):
             local_port: int - Id of the local port to which the server socket will be bound
         '''
         # the server socket is in charge of accepting new connections
-        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_sock.bind((routing.LOCAL_HOST, local_port))
-        server_sock.listen()
+        self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_sock.bind((routing.LOCAL_HOST, local_port))
+        self.server_sock.listen()
 
         # the first connection should be a management connection
-        mgmt_conn, mgmt_addr = server_sock.accept()
+        mgmt_conn, mgmt_addr = self.server_sock.accept()
         print(f"Management connection from {mgmt_addr}")
 
         # read dtype, input shape & output shape from management connection
@@ -49,7 +49,7 @@ class ServerProcess(AbstractProcess):
         mgmt_conn.close()
 
         # use received config to set the process parameters
-        super().__init__(server_sock=server_sock, dtype=dtype, **shapes)
+        super().__init__(server_sock=self.server_sock, dtype=dtype, **shapes)
         self.dtype = dtype
 
         # NOTE: in / out is w.r.t. the client process, therefore the following inversion with the ports
@@ -61,6 +61,7 @@ class ServerProcess(AbstractProcess):
 @requires(CPU)
 @tag('fixed_pt')
 class PyServerProcess(PyLoihiProcessModel):
+    # TODO: specify whether we deal with spikes or activations?
     inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
     outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 

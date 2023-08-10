@@ -1,6 +1,8 @@
 import argparse
+import signal
+import sys
 
-from lava.magma.core.run_conditions import RunContinuous
+from lava.magma.core.run_conditions import RunSteps, RunContinuous
 from lava.magma.core.run_configs import Loihi2SimCfg
 from lava.proc.dense.process import Dense
 import numpy as np
@@ -20,6 +22,12 @@ if __name__ == "__main__":
 
     server = _lava.ServerProcess(port)
 
+    def signal_handler(sig, frame):
+        print('You pressed Ctrl+C!')
+        server.server_sock.close()
+        sys.exit(0)
+    signal.signal(signal.SIGINT, signal_handler)
+
     dense_shape = (int(np.prod(server.inp.shape)),
                    int(np.prod(server.outp.shape)))
 
@@ -27,8 +35,6 @@ if __name__ == "__main__":
     dense_weights = np.zeros(dense_shape, dtype=server.dtype)
     min_size = min(*dense_shape)
     dense_weights[np.arange(min_size), np.arange(min_size)] = 2
-
-    print(dense_weights)
 
     dense_proc = Dense(weights=dense_weights)
 

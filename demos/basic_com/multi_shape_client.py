@@ -31,7 +31,7 @@ if __name__ == '__main__':
     client = _lava.ClientProcess(
         port, dtype, in_shape, out_shape, send_init_msg=send_init_msg)
 
-    n_runs, n_steps = 4, 10
+    n_runs, n_steps = 2, 8
     for _ in range(n_runs):
         # TODO: de-hardcode tag
         client.run(condition=RunSteps(n_steps),

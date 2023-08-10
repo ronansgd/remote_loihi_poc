@@ -80,16 +80,16 @@ class PyClientProcess(PyLoihiProcessModel):
         # send dummy data
         # TODO: plug with meaningful spike generator
         arr = np.zeros(self.in_shape, self.dtype)
-        arr[:self.time_step % self.in_shape[0]] = 1
+        arr[(self.time_step - 1) % self.in_shape[0]] = 1
 
         self.data_conn.sendall(arr.tobytes())
-        print(f"Sent {arr}")
+        print(f"{self.time_step}: sent {arr}")
 
         # read returned data
         arr_bytes = self.data_conn.recv(self.array_msg_len)
         read_arr = np.frombuffer(
             arr_bytes, dtype=self.dtype).reshape(self.out_shape)
-        print(f"Received: {read_arr}")
+        print(f"{self.time_step}: received {read_arr}")
 
     # def _req_rs_stop(self) -> None:
     #     # NOTE: it seems that this callback is not called on .stop()
