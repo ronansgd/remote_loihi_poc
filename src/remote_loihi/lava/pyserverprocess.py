@@ -1,4 +1,6 @@
 import socket
+import sys
+import time
 
 from lava.magma.core.decorator import implements, requires, tag
 from lava.magma.core.model.py.model import PyLoihiProcessModel
@@ -19,14 +21,31 @@ from remote_loihi import (
 class ServerProcess(AbstractProcess):
     SHAPE_KEYS = ("in_shape", "out_shape")
 
-    def __init__(self, local_port: int) -> None:
+    def __init__(self, local_port: int, **kwargs) -> None:
         '''
         Args:
             local_port: int - Id of the local port to which the server socket will be bound
+        Kwargs:
+            max_bind_tries: int = 5
+            sleep_dt: float = 1. - Sleeping duration between each bind attempt (seconds)
         '''
         # the server socket is in charge of accepting new connections
         self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_sock.bind((routing.LOCAL_HOST, local_port))
+
+        max_bind_tries = kwargs.get("max_bind_tries", 5)
+        sleep_dt = kwargs.get("sleep_dt", 1.)
+        for n in range(max_bind_tries):
+            try:
+                self.server_sock.bind((routing.LOCAL_HOST, local_port))
+                break
+            except OSError:
+                print(f"Binding attempt {n+1} failed")
+                if n == max_bind_tries - 1:
+                    print(f"Maximal number of binding attempts reached, exiting...")
+                    sys.exit(1)
+                time.sleep(sleep_dt)
+        print(f"Binding attempt {n} succeeded")
+
         self.server_sock.listen()
 
         # the first connection should be a management connection
