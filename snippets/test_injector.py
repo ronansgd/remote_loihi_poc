@@ -1,14 +1,11 @@
-from lava.proc.io.injector import Injector
-from lava.proc.io.extractor import Extractor
 from lava.magma.core.run_conditions import RunSteps
 from lava.magma.core.run_configs import Loihi2SimCfg
-from lava.proc.io.utils import ChannelConfig, SendFull, ReceiveEmpty, ReceiveNotEmpty
+from lava.proc.io.extractor import Extractor
+from lava.proc.io.injector import Injector
+from lava.proc.io.utils import ChannelConfig, SendFull
 import numpy as np
 
 if __name__ == "__main__":
-    chan_conf = ChannelConfig(
-        SendFull.NON_BLOCKING_DROP, ReceiveEmpty.BLOCKING, ReceiveNotEmpty.ACCUMULATE)
-
     data_shape = (10,)
     buffer_size = 1
     channel_config = ChannelConfig(send_full=SendFull.BLOCKING)

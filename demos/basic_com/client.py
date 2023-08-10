@@ -2,6 +2,9 @@ import argparse
 
 from lava.magma.core.run_conditions import RunSteps
 from lava.magma.core.run_configs import Loihi2SimCfg
+from lava.proc.io.extractor import Extractor
+from lava.proc.io.injector import Injector
+from lava.proc.io.utils import ChannelConfig, SendFull
 import numpy as np
 
 from remote_loihi import (
@@ -10,6 +13,7 @@ from remote_loihi import (
 
 
 if __name__ == '__main__':
+    # init client process
     parser = argparse.ArgumentParser()
     # should we send shape & dtype to the remote server?
     parser.add_argument('--remote-init', dest="remote_init",
@@ -31,9 +35,34 @@ if __name__ == '__main__':
     client = _lava.ClientProcess(
         port, dtype, in_shape, out_shape, send_init_msg=send_init_msg)
 
-    n_runs, n_steps = 2, 8
-    for _ in range(n_runs):
+    # connect data injector & extractor
+    buffer_size = 1
+    channel_config = ChannelConfig(send_full=SendFull.BLOCKING)
+
+    injector = Injector(shape=in_shape, buffer_size=buffer_size,
+                        channel_config=channel_config)
+    injector.out_port.connect(client.in_port)
+
+    extractor = Extractor(shape=out_shape, buffer_size=buffer_size,
+                          channel_config=channel_config)
+    client.out_port.connect(extractor.in_port)
+
+    # run the network
+    n_steps = 10
+    for i in range(n_steps):
+        # TODO: put meaningful data here
+        in_array = np.zeros(in_shape, dtype)
+        in_array[i % out_shape[0]] = 1
+
+        print(f"{i}: sent {in_array}")
+
+        # set data in injector & run
         # TODO: de-hardcode tag
-        client.run(condition=RunSteps(n_steps),
-                   run_cfg=Loihi2SimCfg(select_tag="fixed_pt"))
-    client.stop()
+        injector.send(in_array)
+        injector.run(condition=RunSteps(1),
+                     run_cfg=Loihi2SimCfg(select_tag="fixed_pt"))
+        out_array = extractor.receive()
+        print(f"{i}: received {out_array}")
+
+    for p in (injector, client, extractor):
+        p.stop()

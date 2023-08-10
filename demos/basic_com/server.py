@@ -30,7 +30,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     dense_shape = tuple((int(np.prod(s))
-                        for s in (server.inp.shape, server.outp.shape)))
+                        for s in (server.in_port.shape, server.out_port.shape)))
 
     # create dense connection to close the loop
     # NOTE: the dense process will cause a latency of one step
@@ -39,8 +39,9 @@ if __name__ == "__main__":
     dense_weights[np.arange(min_size), np.arange(min_size)] = 2
     dense_proc = Dense(weights=dense_weights)
 
-    server.outp.reshape(new_shape=dense_shape[1:]).connect(dense_proc.s_in)
-    dense_proc.a_out.reshape(new_shape=server.inp.shape).connect(server.inp)
+    server.out_port.reshape(new_shape=dense_shape[1:]).connect(dense_proc.s_in)
+    dense_proc.a_out.reshape(
+        new_shape=server.in_port.shape).connect(server.in_port)
 
     # TODO: adapt tag to input dtype
     server.run(condition=RunContinuous(),

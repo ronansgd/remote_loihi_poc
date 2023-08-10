@@ -30,8 +30,8 @@ class ClientProcess(AbstractProcess):
 
         super().__init__(port=com_port, dtype=dtype, in_shape=in_shape, out_shape=out_shape)
 
-        self.inp = InPort(shape=in_shape)
-        self.outp = OutPort(shape=out_shape)
+        self.in_port = InPort(shape=in_shape)
+        self.out_port = OutPort(shape=out_shape)
 
         if kwargs.get("send_init_msg", True):
             # init & connect management socket
@@ -60,8 +60,8 @@ class ClientProcess(AbstractProcess):
 @requires(CPU)
 @tag('fixed_pt')
 class PyClientProcess(PyLoihiProcessModel):
-    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
-    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
+    in_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
+    out_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
@@ -77,19 +77,16 @@ class PyClientProcess(PyLoihiProcessModel):
         routing.wait_for_server(self.data_conn, routing.LOCAL_HOST, port)
 
     def run_spk(self) -> None:
-        # send dummy data
-        # TODO: plug with meaningful spike generator
-        arr = np.zeros(self.in_shape, self.dtype)
-        arr[(self.time_step - 1) % self.in_shape[0]] = 1
+        # forward local input data
+        # TODO: do more checks before casting
+        in_arr = self.in_port.recv().astype(self.dtype)
+        self.data_conn.sendall(in_arr.tobytes())
 
-        self.data_conn.sendall(arr.tobytes())
-        print(f"{self.time_step}: sent {arr}")
-
-        # read returned data
-        arr_bytes = self.data_conn.recv(self.array_msg_len)
-        read_arr = np.frombuffer(
-            arr_bytes, dtype=self.dtype).reshape(self.out_shape)
-        print(f"{self.time_step}: received {read_arr}")
+        # forward remote output
+        out_arr_bytes = self.data_conn.recv(self.array_msg_len)
+        out_arr = np.frombuffer(
+            out_arr_bytes, dtype=self.dtype).reshape(self.out_shape)
+        self.out_port.send(out_arr)
 
     # def _req_rs_stop(self) -> None:
     #     # NOTE: it seems that this callback is not called on .stop()
