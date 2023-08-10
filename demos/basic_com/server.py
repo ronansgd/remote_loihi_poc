@@ -29,8 +29,8 @@ if __name__ == "__main__":
         sys.exit(0)
     signal.signal(signal.SIGINT, signal_handler)
 
-    dense_shape = (int(np.prod(server.inp.shape)),
-                   int(np.prod(server.outp.shape)))
+    dense_shape = tuple((int(np.prod(s))
+                        for s in (server.inp.shape, server.outp.shape)))
 
     # create dense connection to close the loop
     # NOTE: the dense process will cause a latency of one step

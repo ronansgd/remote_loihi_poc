@@ -53,8 +53,8 @@ class ServerProcess(AbstractProcess):
         self.dtype = dtype
 
         # NOTE: in / out is w.r.t. the client process, therefore the following inversion with the ports
-        self.inp = InPort(shape=shapes["out_shape"])
-        self.outp = OutPort(shape=shapes["in_shape"])
+        self.in_port = InPort(shape=shapes["out_shape"])
+        self.out_port = OutPort(shape=shapes["in_shape"])
 
 
 @implements(proc=ServerProcess, protocol=LoihiProtocol)
@@ -62,8 +62,8 @@ class ServerProcess(AbstractProcess):
 @tag('fixed_pt')
 class PyServerProcess(PyLoihiProcessModel):
     # TODO: specify whether we deal with spikes or activations?
-    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
-    outp: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
+    in_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
+    out_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
@@ -92,12 +92,12 @@ class PyServerProcess(PyLoihiProcessModel):
             in_arr = np.frombuffer(
                 in_arr_bytes, dtype=self.dtype).reshape(self.in_shape)
             print(f"{self.time_step}: forwarding array {in_arr}")
-            # TODO: should we cast to the port type>
-            self.outp.send(in_arr)
+            # TODO: should we cast to the port type?
+            self.out_port.send(in_arr)
 
             # send back local input
-            # TODO: is there a better way to align port type & class dtype?
-            out_arr = self.inp.recv().astype(self.dtype)
+            # TODO: is there a better way to relate port type & class dtype?
+            out_arr = self.in_port.recv().astype(self.dtype)
             self.data_conn.sendall(out_arr.tobytes())
             print(f"{self.time_step}: received back array {out_arr}")
 
