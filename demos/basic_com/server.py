@@ -12,6 +12,7 @@ from remote_loihi import (
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=None)
+    parser.add_argument('--sim', type=int, default=None)
 
     args = parser.parse_args()
     port = args.port
