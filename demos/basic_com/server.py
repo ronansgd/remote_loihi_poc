@@ -23,22 +23,16 @@ if __name__ == "__main__":
         print("No --sim flag provided; running on simulated hardware by default")
         args.sim = 1
 
-    real_loihi = args.sim <= 0
-    if real_loihi:
-        print("Running on real Loihi 2...")
-        run_cfg = Loihi2HwCfg()
-    else:
-        # run on simulated hardware
-        # TODO: add possibility to pick floating point
-        print("Running on simulated Loihi 2...")
-        run_cfg = Loihi2SimCfg(select_tag="fixed_pt")
-
     server = _lava.ServerProcess(port)
     dense_shape = tuple((int(np.prod(s))
                         for s in (server.inp.shape, server.out.shape)))
     input_procs = [server]
 
+    real_loihi = args.sim <= 0
     if real_loihi:
+        print("Running on real Loihi 2...")
+        run_cfg = Loihi2HwCfg()
+
         # wrap server with nx2py & py2nx adapters
         from lava.proc.embedded_io.spike import PyToNxAdapter, NxToPyAdapter
         # TODO: align port names to allow factorization
@@ -49,6 +43,11 @@ if __name__ == "__main__":
         nx2py = NxToPyAdapter(shape=server.inp.shape)
         nx2py.out.connect(server.inp)
         input_procs.insert(0, nx2py)
+    else:
+        # run on simulated hardware
+        # TODO: add possibility to pick floating point
+        print("Running on simulated Loihi 2...")
+        run_cfg = Loihi2SimCfg(select_tag="fixed_pt")
 
     # create dense connection to close the loop
     # NOTE: the dense process will cause a latency of one step
