@@ -17,6 +17,8 @@ from remote_loihi import (
     routing
 )
 
+''' Process '''
+
 
 class ServerProcess(AbstractProcess):
     SHAPE_KEYS = ("in_shape", "out_shape")
@@ -72,8 +74,11 @@ class ServerProcess(AbstractProcess):
         self.dtype = dtype
 
         # NOTE: in / out is w.r.t. the client process, therefore the following inversion with the ports
-        self.in_port = InPort(shape=shapes["out_shape"])
-        self.out_port = OutPort(shape=shapes["in_shape"])
+        self.inp = InPort(shape=shapes["out_shape"])
+        self.out = OutPort(shape=shapes["in_shape"])
+
+
+''' ProcessModels '''
 
 
 @implements(proc=ServerProcess, protocol=LoihiProtocol)
@@ -81,8 +86,8 @@ class ServerProcess(AbstractProcess):
 @tag('fixed_pt')
 class PyServerProcess(PyLoihiProcessModel):
     # TODO: specify whether we deal with spikes or activations?
-    in_port: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
-    out_port: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
+    inp: PyInPort = LavaPyType(PyInPort.VEC_DENSE, np.int32)
+    out: PyOutPort = LavaPyType(PyOutPort.VEC_DENSE, np.int32)
 
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
@@ -112,11 +117,11 @@ class PyServerProcess(PyLoihiProcessModel):
                 in_arr_bytes, dtype=self.dtype).reshape(self.in_shape)
             print(f"{self.time_step}: forwarding array {in_arr}")
             # TODO: should we cast to the port type?
-            self.out_port.send(in_arr)
+            self.out.send(in_arr)
 
             # send back local input
             # TODO: is there a better way to relate port type & class dtype?
-            out_arr = self.in_port.recv().astype(self.dtype)
+            out_arr = self.inp.recv().astype(self.dtype)
             self.data_conn.sendall(out_arr.tobytes())
             print(f"{self.time_step}: received back array {out_arr}")
 
