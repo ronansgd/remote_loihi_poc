@@ -3,6 +3,7 @@ import argparse
 from lava.magma.core.run_conditions import RunContinuous
 from lava.magma.core.run_configs import Loihi2HwCfg, Loihi2SimCfg
 from lava.proc.dense.process import Dense
+from lava.proc.lif.process import LIF
 import numpy as np
 
 from remote_loihi import (
@@ -55,11 +56,18 @@ if __name__ == "__main__":
     min_size = min(*dense_shape)
     dense_weights[np.arange(min_size), np.arange(min_size)] = 2
     dense_proc = Dense(weights=dense_weights)
-
     input_procs[-1].out.reshape(new_shape=dense_shape[1:]
                                 ).connect(dense_proc.s_in)
-    dense_proc.a_out.reshape(
-        new_shape=server.inp.shape).connect(input_procs[0].inp)
+
+    if real_loihi:
+        # NOTE: on real Loihi, a neuron process must be added in between
+        lif = LIF(shape=input_procs[0].inp.shape)
+        dense_proc.a_out.reshape(
+            new_shape=lif.a_in.shape).connect(lif.a_in)
+        lif.s_out.connect(input_procs[0].inp)
+    else:
+        dense_proc.a_out.reshape(
+            new_shape=input_procs[0].inp.shape).connect(input_procs[0].inp)
 
     server.run(condition=RunContinuous(),
                run_cfg=run_cfg)

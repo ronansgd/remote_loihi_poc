@@ -106,24 +106,21 @@ class PyServerProcess(PyLoihiProcessModel):
         if not in_arr_bytes:
             print(f"The current client terminated the connection")
             self.data_conn.close()
-
             self.wait_for_data_conn()
 
             # re-run run spike with new data connection
             self.run_spk()
         else:
             # send remote input out
+            # TODO: should we cast to the port type?
             in_arr = np.frombuffer(
                 in_arr_bytes, dtype=self.dtype).reshape(self.in_shape)
-            print(f"{self.time_step}: forwarding array {in_arr}")
-            # TODO: should we cast to the port type?
             self.out.send(in_arr)
 
             # send back local input
             # TODO: is there a better way to relate port type & class dtype?
             out_arr = self.inp.recv().astype(self.dtype)
             self.data_conn.sendall(out_arr.tobytes())
-            print(f"{self.time_step}: received back array {out_arr}")
 
     def wait_for_data_conn(self) -> None:
         self.data_conn, addr = self.server_sock.accept()
