@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "remote-loihi"
+authors= [
+    {name = "Ronan Sangouard", email = "sangouard@fortiss.org"}
+]
+description="Python package for a PoC of the remote Loihi process."
+version = "0.0.1"
+requires-python = ">=3.8"
+dependencies = [
+    "autopep8==1.6.0",
+    "tqdm"
+]
